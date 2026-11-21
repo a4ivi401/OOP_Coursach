@@ -1,0 +1,9 @@
+.task_docs
+.DS_Store
+bin/
+obj/
+data/
+*.user
+.vs/
+.idea/
+TestResults/

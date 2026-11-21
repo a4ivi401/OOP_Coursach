@@ -1,0 +1,91 @@
+classDiagram
+    direction TB
+    class App {
+        -Shop _shop
+        -NotificationCenter _notifications
+        +Run()
+        -LoadData() bool
+        -SaveWithRetry()
+        -OnCancelKeyPress(sender, e)
+    }
+    class MenuScreen {
+        <<abstract>>
+        #Shop Shop
+        #string Title*
+        #string BackLabel
+        #RenderBody()
+        #GetMenu()* IEnumerable~MenuItem~
+        #Close()
+        +Show()
+    }
+    class MenuItem {
+        <<record>>
+        +string Label
+        +Action Action
+        +bool ClosesScreen
+    }
+    class Input {
+        <<static>>
+        +Ask~T~(label, parse, current?) T
+        +Int(label, min, max) int
+        +Decimal(label, min, max) decimal
+        +Date(label) DateTime
+        +Confirm(question) bool
+        +Select~T~(title, items, display) T?
+    }
+    class Ui {
+        <<static>>
+        +Header()
+        +Run(Action action)
+        +Error(Exception)
+        +Success(message)
+        +CardRow(Panel[])
+    }
+    class Theme {
+        <<static>>
+        +Money(decimal)$ string
+        +StatusMarkup(OrderStatus)$ string
+    }
+    class NotificationCenter {
+        +Items
+        +OnLowStock(sender, LowStockEventArgs)
+    }
+    class InputCancelledException
+
+    MenuScreen <|-- MainScreen
+    MenuScreen <|-- CustomerScreen
+    MenuScreen <|-- CatalogScreen
+    MenuScreen <|-- CartScreen
+    MenuScreen <|-- MyOrdersScreen
+    MenuScreen <|-- ProfileScreen
+    MenuScreen <|-- AdminScreen
+    MenuScreen <|-- ProductsAdminScreen
+    MenuScreen <|-- CategoriesAdminScreen
+    MenuScreen <|-- OrdersAdminScreen
+    MenuScreen <|-- CouponsAdminScreen
+    MenuScreen <|-- CustomersAdminScreen
+
+    class CheckoutFlow {
+        <<static>>
+        +Run(Shop, Customer) bool
+    }
+    class ReportsView {
+        <<static>>
+        +Show(Shop)
+    }
+
+    App --> MainScreen
+    App --> NotificationCenter
+    MenuScreen ..> MenuItem
+    MenuScreen ..> Ui
+    MenuScreen ..> Input
+    MainScreen --> CustomerScreen
+    MainScreen --> AdminScreen
+    CustomerScreen --> CatalogScreen
+    CustomerScreen --> CartScreen
+    CustomerScreen --> MyOrdersScreen
+    CustomerScreen --> ProfileScreen
+    CartScreen --> CheckoutFlow
+    AdminScreen --> ReportsView
+    AdminScreen --> NotificationCenter
+    Input ..> InputCancelledException : throws

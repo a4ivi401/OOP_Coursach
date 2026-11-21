@@ -1,0 +1,47 @@
+classDiagram
+    direction TB
+    class Exception {
+        <<.NET>>
+        +string Message
+        +Exception InnerException
+    }
+    class ShopException {
+        +ShopException(message)
+        +ShopException(message, inner)
+    }
+    class OutOfStockException {
+        +string ProductName
+        +int Requested
+        +int Available
+    }
+    class InvalidDiscountException {
+        +string? CouponCode
+    }
+    class EntityNotFoundException {
+        +string EntityName
+        +string Key
+    }
+    class DuplicateEntityException {
+        +string EntityName
+        +string Key
+    }
+    class EntityInUseException
+    class EmptyCartException
+    class InvalidOrderStateException {
+        +OrderStatus From
+        +OrderStatus To
+    }
+    class AccessDeniedException
+    class DataStorageException {
+        +string Path
+    }
+    Exception <|-- ShopException
+    ShopException <|-- OutOfStockException
+    ShopException <|-- InvalidDiscountException
+    ShopException <|-- EntityNotFoundException
+    ShopException <|-- DuplicateEntityException
+    ShopException <|-- EntityInUseException
+    ShopException <|-- EmptyCartException
+    ShopException <|-- InvalidOrderStateException
+    ShopException <|-- AccessDeniedException
+    ShopException <|-- DataStorageException

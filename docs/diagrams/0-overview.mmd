@@ -1,0 +1,26 @@
+flowchart LR
+    subgraph UI["ElectroShop.UI (Console App)"]
+        direction TB
+        P[Program] --> A[App]
+        A --> MS[MainScreen]
+        MS --> CS[Екрани покупця]
+        MS --> AS[Екрани адміністратора]
+        IN[Input / Ui / Theme]
+    end
+    subgraph CORE["ElectroShop.Core (Class Library .dll)"]
+        direction TB
+        SH[Shop — фасад] --> SV[Сервіси:<br/>Catalog, Customer, Cart,<br/>Coupon, Order, Report]
+        SV --> CTX[ShopContext<br/>Repository#60;T#62; × 5]
+        SV --> PR[PriceCalculator<br/>IDiscountPolicy]
+        CTX --> M[Моделі:<br/>Product, Category, Customer,<br/>Order, Coupon…]
+        SH --> ST[IDataStorage#60;T#62;<br/>JsonDataStorage]
+        EX[ShopException + 9 нащадків]
+    end
+    subgraph TESTS["ElectroShop.Tests (xUnit)"]
+        T[71 тест]
+    end
+    FILE[(data/shop.json)]
+    CS --> SH
+    AS --> SH
+    ST <--> FILE
+    T --> SH

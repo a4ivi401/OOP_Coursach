@@ -1,0 +1,220 @@
+classDiagram
+    direction TB
+
+    class IEntity {
+        <<interface>>
+        +Guid Id
+    }
+    class EntityBase {
+        <<abstract>>
+        +Guid Id
+        +string DisplayName*
+        +ToString() string
+    }
+    IEntity <|.. EntityBase
+
+    class Category {
+        -string _name
+        -string _description
+        +string Name
+        +string Description
+    }
+    class Product {
+        -string _sku
+        -decimal _price
+        -int _stock
+        -Dictionary~string,string~ SpecificationsData
+        +string Sku
+        +string Name
+        +string Brand
+        +Guid CategoryId
+        +decimal Price
+        +int StockQuantity
+        +int WarrantyMonths
+        +IReadOnlyDictionary Specifications
+        +bool IsAvailable
+        +bool IsLowStock
+        +ReserveStock(int qty)
+        +Restock(int qty)
+        +EnsureInStock(int qty)
+        +SetSpecification(key, value)
+        +CompareTo(Product) int
+    }
+    class Customer {
+        -string _email
+        -string _phone
+        +string FullName
+        +string Email
+        +string Phone
+        +string Address
+        +DateTime RegisteredAt
+        +decimal TotalSpent
+        +Cart Cart
+        +LoyaltyLevel LoyaltyLevel
+        +NormalizePhone(string)$ string
+    }
+    class Cart {
+        -List~CartItem~ ItemsData
+        +IReadOnlyList~CartItem~ Items
+        +bool IsEmpty
+        +int TotalQuantity
+        +Add(Guid productId, int qty)
+        +SetQuantity(Guid productId, int qty)
+        +Remove(Guid productId) bool
+        +Clear()
+    }
+    class CartItem {
+        +Guid ProductId
+        +int Quantity
+    }
+    class Order {
+        +int Number
+        +Guid CustomerId
+        +DateTime CreatedAt
+        +OrderStatus Status
+        +DeliveryMethod Delivery
+        +string ShippingAddress
+        +string? CouponCode
+        +PriceBreakdown Pricing
+        +IReadOnlyList~OrderItem~ Items
+        +IReadOnlyList~OrderStatusChange~ History
+        +bool CanBeCancelled
+        +ChangeStatus(OrderStatus, DateTime)
+        +CompareTo(Order) int
+    }
+    class OrderItem {
+        +Guid ProductId
+        +Guid CategoryId
+        +string ProductName
+        +decimal UnitPrice
+        +int Quantity
+        +decimal LineTotal
+    }
+    class OrderStatusChange {
+        <<record>>
+        +OrderStatus Status
+        +DateTime ChangedAt
+    }
+    class OrderStatus {
+        <<enumeration>>
+        New
+        Paid
+        Shipped
+        Delivered
+        Cancelled
+    }
+    class DeliveryMethod {
+        <<enumeration>>
+        Pickup
+        PostOffice
+        Courier
+    }
+    class LoyaltyLevel {
+        <<enumeration>>
+        Bronze
+        Silver
+        Gold
+        Platinum
+    }
+
+    EntityBase <|-- Category
+    EntityBase <|-- Product
+    EntityBase <|-- Customer
+    EntityBase <|-- Order
+    EntityBase <|-- Coupon
+
+    class IComparable~T~ {
+        <<interface>>
+        +CompareTo(T other) int
+    }
+    IComparable~T~ <|.. Product
+    IComparable~T~ <|.. Order
+
+    Product "*" --> "1" Category : CategoryId
+    Customer *-- "1" Cart
+    Cart *-- "*" CartItem
+    CartItem --> Product : ProductId
+    Order *-- "1..*" OrderItem
+    Order *-- "1..*" OrderStatusChange
+    Order --> Customer : CustomerId
+    Order --> OrderStatus
+    Order --> DeliveryMethod
+    Order *-- PriceBreakdown
+    Customer --> LoyaltyLevel
+
+    class IDiscountPolicy {
+        <<interface>>
+        +string Description
+        +CalculateDiscount(PricingContext) decimal
+    }
+    class Coupon {
+        <<abstract>>
+        +string Code
+        +DateTime ValidFrom
+        +DateTime? ValidUntil
+        +decimal MinOrderAmount
+        +int? UsageLimit
+        +int UsedCount
+        +bool IsActive
+        +string TypeName*
+        +string ValueText*
+        +EnsureApplicable(PricingContext, DateTime)
+        +CalculateDiscount(PricingContext) decimal
+        +RegisterUsage()
+        +ReleaseUsage()
+        #ValidateSpecific(PricingContext)
+        #CalculateRawDiscount(PricingContext)* decimal
+    }
+    class PercentageCoupon {
+        +decimal Percent
+    }
+    class FixedAmountCoupon {
+        +decimal Amount
+    }
+    class CategoryCoupon {
+        +Guid CategoryId
+        +string CategoryName
+        +decimal Percent
+        #ValidateSpecific(PricingContext)
+    }
+    class LoyaltyDiscountPolicy {
+        -LoyaltyLevel _level
+        +decimal Percent
+    }
+    IDiscountPolicy <|.. Coupon
+    IDiscountPolicy <|.. LoyaltyDiscountPolicy
+    Coupon <|-- PercentageCoupon
+    Coupon <|-- FixedAmountCoupon
+    Coupon <|-- CategoryCoupon
+
+    class PricingContext {
+        +IReadOnlyList~OrderItem~ Items
+        +decimal Subtotal
+        +SubtotalForCategory(Guid) decimal
+    }
+    class PriceBreakdown {
+        <<record>>
+        +decimal Subtotal
+        +decimal CouponDiscount
+        +decimal LoyaltyDiscount
+        +decimal DeliveryCost
+        +decimal TotalDiscount
+        +decimal Total
+    }
+    class PriceCalculator {
+        +FreeDeliveryThreshold$ decimal
+        +MaxDiscountShare$ decimal
+        +Calculate(items, delivery, Coupon?, LoyaltyLevel) PriceBreakdown
+        +GetDeliveryBaseCost(DeliveryMethod)$ decimal
+    }
+    class LoyaltyProgram {
+        <<static>>
+        +GetLevel(decimal totalSpent)$ LoyaltyLevel
+        +GetPercent(LoyaltyLevel)$ decimal
+        +GetNextLevel(LoyaltyLevel)$ LoyaltyLevel?
+    }
+    PriceCalculator ..> IDiscountPolicy : uses
+    PriceCalculator ..> PricingContext : creates
+    PriceCalculator ..> PriceBreakdown : creates
+    PricingContext o-- OrderItem
+    LoyaltyDiscountPolicy ..> LoyaltyProgram
